@@ -21,6 +21,23 @@ export async function PUT(
       );
     }
 
+    const getMumineenAddress = await Mumineen.findOne({ its_id: its_id });
+    const address = getMumineenAddress?.address;
+    if (address && address !== body.address) {
+      const updateAllMumineenAddress = await Mumineen.updateMany({ address: address, hof_id: body.hof_id }, { address: body.address });
+      if (!updateAllMumineenAddress) {
+        return NextResponse.json(
+          { success: false, error: 'Failed to update all mumineen address' },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          { success: true, message: 'All mumineen address updated successfully' },
+          { status: 200 }
+        );
+      }
+    }
+
     const updatedMumineen = await Mumineen.findOneAndUpdate(
       { its_id: its_id },
       {
@@ -99,7 +116,6 @@ export async function DELETE(
   try {
     await connectDB();
 
-    console.log('this is the id', params);
     const { id } = params;
     const deletedMumineen = await Mumineen.findOneAndUpdate(
       { its_id: id },
