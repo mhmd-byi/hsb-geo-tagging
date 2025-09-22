@@ -11,7 +11,7 @@ export async function PUT(
     await connectDB();
 
     const body = await request.json();
-    const { id } = params;
+    const { its_id } = body;
 
     // Validate required fields
     if (!body.its_id || !body.full_name || !body.sabil_no) {
@@ -21,23 +21,8 @@ export async function PUT(
       );
     }
 
-    // Check if sabil_no already exists for a different record
-    if (body.sabil_no) {
-      const existingMumineen = await Mumineen.findOne({
-        sabil_no: body.sabil_no,
-        _id: { $ne: id }
-      });
-
-      if (existingMumineen) {
-        return NextResponse.json(
-          { success: false, error: 'Sabil number already exists' },
-          { status: 400 }
-        );
-      }
-    }
-
-    const updatedMumineen = await Mumineen.findByIdAndUpdate(
-      id,
+    const updatedMumineen = await Mumineen.findOneAndUpdate(
+      { its_id: its_id },
       {
         its_id: body.its_id,
         hof_id: body.hof_id,
@@ -114,8 +99,12 @@ export async function DELETE(
   try {
     await connectDB();
 
+    console.log('this is the id', params);
     const { id } = params;
-    const deletedMumineen = await Mumineen.findByIdAndDelete(id);
+    const deletedMumineen = await Mumineen.findOneAndUpdate(
+      { its_id: id },
+      { isDeleted: true }
+    );
 
     if (!deletedMumineen) {
       return NextResponse.json(
