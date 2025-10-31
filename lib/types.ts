@@ -16,6 +16,7 @@ export interface Mumineen {
   misaq?: string;
   marital_status?: string;
   address?: string;
+  google_maps_link?: string;
   musaed_name?: string;
   musaed_contact?: string;
   isDeleted?: boolean;

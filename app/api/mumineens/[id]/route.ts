@@ -47,36 +47,57 @@ export async function PUT(
       // Only allow address update for user role
       const updatedMumineen = await Mumineen.findOneAndUpdate(
         { its_id: its_id },
-        { address: body.address },
+        { 
+          address: body.address,
+          google_maps_link: body.google_maps_link
+        },
         { new: true, runValidators: true }
       );
 
-      // Update address for all family members with same HOF
+      // Update address and Google Maps link for all family members with same HOF
       await Mumineen.updateMany(
         { hof_id: getMumineen.hof_id },
-        { address: body.address }
+        { 
+          address: body.address,
+          google_maps_link: body.google_maps_link
+        }
       );
 
       return NextResponse.json({
         success: true,
         data: updatedMumineen,
-        message: 'Address updated successfully for all family members'
+        message: 'Address and Google Maps link updated successfully for all family members'
       });
     }
 
     // Admin users can update all fields
     const getMumineenAddress = await Mumineen.findOne({ its_id: its_id });
     const address = getMumineenAddress?.address;
-    if (address && address !== body.address) {
-      const updateAllMumineenAddress = await Mumineen.updateMany({ address: address, hof_id: body.hof_id }, { address: body.address });
+    const googleMapsLink = getMumineenAddress?.google_maps_link;
+    
+    // Update all family members if address or Google Maps link changed
+    if ((address && address !== body.address) || (googleMapsLink && googleMapsLink !== body.google_maps_link)) {
+      const updateFields: any = {};
+      if (address !== body.address) {
+        updateFields.address = body.address;
+      }
+      if (googleMapsLink !== body.google_maps_link) {
+        updateFields.google_maps_link = body.google_maps_link;
+      }
+      
+      const updateAllMumineenAddress = await Mumineen.updateMany(
+        { hof_id: body.hof_id }, 
+        updateFields
+      );
+      
       if (!updateAllMumineenAddress) {
         return NextResponse.json(
-          { success: false, error: 'Failed to update all mumineen address' },
+          { success: false, error: 'Failed to update all mumineen records' },
           { status: 400 }
         );
       } else {
         return NextResponse.json(
-          { success: true, message: 'All mumineen address updated successfully' },
+          { success: true, message: 'All mumineen records updated successfully' },
           { status: 200 }
         );
       }
@@ -96,6 +117,7 @@ export async function PUT(
         misaq: body.misaq,
         marital_status: body.marital_status,
         address: body.address,
+        google_maps_link: body.google_maps_link,
       },
       { new: true, runValidators: true }
     );

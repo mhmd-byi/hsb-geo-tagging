@@ -33,6 +33,7 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
         misaq: mumineen.misaq,
         marital_status: mumineen.marital_status,
         address: mumineen.address,
+        google_maps_link: mumineen.google_maps_link,
       });
     }
   }, [mumineen]);
@@ -103,6 +104,22 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter the address..."
                 />
+              </div>
+
+              {/* Google Maps Link for Users */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Google Maps Link
+                </label>
+                <input
+                  type="url"
+                  name="google_maps_link"
+                  value={formData.google_maps_link || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, google_maps_link: e.target.value }))}
+                  placeholder="https://maps.google.com/..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Paste the Google Maps link for this location</p>
               </div>
             </div>
           ) : (
@@ -274,6 +291,21 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                 value={formData.address || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                 rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Google Maps Link */}
+            <div className="md:col-span-2 lg:col-span-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Google Maps Link
+              </label>
+              <input
+                type="url"
+                name="google_maps_link"
+                value={formData.google_maps_link || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, google_maps_link: e.target.value }))}
+                placeholder="https://maps.google.com/..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
