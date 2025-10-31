@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import connectDB from '../../../../lib/mongodb';
 import Mumineen from '../../../../models/Mumineen';
+import { authOptions } from '@/lib/auth';
 
 // PUT - Update a mumineen record
 export async function PUT(
@@ -8,6 +10,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    
     await connectDB();
 
     const body = await request.json();
@@ -21,6 +25,46 @@ export async function PUT(
       );
     }
 
+    // For users with 'user' role, only allow address updates
+    if (session?.user?.role === 'user') {
+      const getMumineen = await Mumineen.findOne({ its_id: its_id });
+      
+      if (!getMumineen) {
+        return NextResponse.json(
+          { success: false, error: 'Mumineen not found' },
+          { status: 404 }
+        );
+      }
+
+      // Check if it's a HOF record
+      if (getMumineen.its_id !== getMumineen.hof_id) {
+        return NextResponse.json(
+          { success: false, error: 'You can only update head of family records' },
+          { status: 403 }
+        );
+      }
+
+      // Only allow address update for user role
+      const updatedMumineen = await Mumineen.findOneAndUpdate(
+        { its_id: its_id },
+        { address: body.address },
+        { new: true, runValidators: true }
+      );
+
+      // Update address for all family members with same HOF
+      await Mumineen.updateMany(
+        { hof_id: getMumineen.hof_id },
+        { address: body.address }
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: updatedMumineen,
+        message: 'Address updated successfully for all family members'
+      });
+    }
+
+    // Admin users can update all fields
     const getMumineenAddress = await Mumineen.findOne({ its_id: its_id });
     const address = getMumineenAddress?.address;
     if (address && address !== body.address) {
@@ -114,6 +158,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    // Only admin can delete
+    if (session?.user?.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Only admins can delete records' },
+        { status: 403 }
+      );
+    }
+
     await connectDB();
 
     const { id } = params;

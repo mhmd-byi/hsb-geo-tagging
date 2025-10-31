@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Mumineen } from '../lib/types';
 
 interface EditMumineenModalProps {
@@ -11,8 +12,12 @@ interface EditMumineenModalProps {
 }
 
 export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }: EditMumineenModalProps) {
+  const { data: session } = useSession();
   const [formData, setFormData] = useState<Partial<Mumineen>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const isUser = session?.user?.role === 'user';
+  const isAdmin = session?.user?.role === 'admin';
 
   useEffect(() => {
     if (mumineen) {
@@ -63,11 +68,45 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Mumineen Record</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isUser ? 'Update Address' : 'Edit Mumineen Record'}
+          </h2>
           <p className="text-sm text-gray-600 mt-1">Sabil No: {mumineen.sabil_no}</p>
+          {isUser && (
+            <p className="text-xs text-blue-600 mt-1">You can only update the address for head of family</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
+          {isUser ? (
+            // User role - Only show address field
+            <div>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>{formData.full_name}</strong> (ITS: {formData.its_id})
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Updating address will apply to all family members
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address *
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  rows={4}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter the address..."
+                />
+              </div>
+            </div>
+          ) : (
+            // Admin role - Show all fields
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* ITS ID */}
             <div>
@@ -239,7 +278,8 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
               />
             </div>
 
-          </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
             <button

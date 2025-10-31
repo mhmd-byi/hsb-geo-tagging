@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import connectDB from '../../../lib/mongodb';
 import Mumineen from '../../../models/Mumineen';
+import { authOptions } from '@/lib/auth';
 
 // GET - Search mumineens by sabil no
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
     await connectDB();
     
     const { searchParams } = new URL(request.url);
@@ -48,6 +52,11 @@ export async function GET(request: NextRequest) {
     }
 
     const skip = (page - 1) * limit;
+    
+    // For users with 'user' role, only show HOF (where its_id === hof_id)
+    if (session?.user?.role === 'user') {
+      query.$expr = { $eq: ['$its_id', '$hof_id'] };
+    }
     
             const [mumineens, total] = await Promise.all([
               Mumineen.find(query)
