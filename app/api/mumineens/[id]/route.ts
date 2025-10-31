@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth';
 // PUT - Update a mumineen record
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -124,12 +124,12 @@ export async function PUT(
 // GET - Get a single mumineen record
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { id } = await params;
     const mumineen = await Mumineen.findById(id);
 
     if (!mumineen) {
@@ -155,7 +155,7 @@ export async function GET(
 // DELETE - Delete a mumineen record
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -170,7 +170,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const { id } = params;
+    const { id } = await params;
     const deletedMumineen = await Mumineen.findOneAndUpdate(
       { its_id: id },
       { isDeleted: true }
