@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Mumineen } from '../lib/types';
 
@@ -11,13 +11,110 @@ interface EditMumineenModalProps {
   onSave: (updatedMumineen: Partial<Mumineen>) => Promise<void>;
 }
 
+// Debounce function
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number) {
+  let timeout: NodeJS.Timeout | null = null;
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      func(...args);
+    };
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(later, wait);
+  } as T & { cancel?: () => void };
+}
+
 export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }: EditMumineenModalProps) {
   const { data: session } = useSession();
   const [formData, setFormData] = useState<Partial<Mumineen>>({});
+  const [addressFields, setAddressFields] = useState({
+    flatNo: '',
+    apartmentName: '',
+    plotNumber: '',
+    area: '',
+    landmark: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const isUser = session?.user?.role === 'user';
   const isAdmin = session?.user?.role === 'admin';
+
+  // Initialize address fields when mumineen data loads
+  useEffect(() => {
+    if (mumineen) {
+      setFormData({
+        its_id: mumineen.its_id,
+        hof_id: mumineen.hof_id,
+        full_name: mumineen.full_name,
+        age: mumineen.age,
+        gender: mumineen.gender,
+        sabil_no: mumineen.sabil_no,
+        sector: mumineen.sector,
+        contact_no: mumineen.contact_no,
+        misaq: mumineen.misaq,
+        marital_status: mumineen.marital_status,
+        address: mumineen.address,
+        google_maps_link: mumineen.google_maps_link,
+      });
+
+      // Parse existing address into fields
+      if (mumineen.address) {
+        parseAddressIntoFields(mumineen.address);
+      }
+    }
+  }, [mumineen]);
+
+  // Parse address string into individual fields
+  const parseAddressIntoFields = (address: string) => {
+    const parts = address.split(', ').filter(part => part.trim() !== '');
+    
+    // Simple parsing logic - this can be enhanced based on your address format
+    setAddressFields({
+      flatNo: parts[0] || '',
+      apartmentName: parts[1] || '',
+      plotNumber: parts[2] || '',
+      area: parts[3] || '',
+      landmark: parts[4] || ''
+    });
+  };
+
+  // Debounced address generation
+  const debouncedGenerateAddress = useCallback(
+    debounce((fields) => {
+      const parts = [
+        fields.flatNo,
+        fields.apartmentName,
+        fields.plotNumber,
+        fields.area,
+        fields.landmark
+      ].filter(part => part.trim() !== '');
+      
+      const generatedAddress = parts.join(', ');
+      setFormData(prev => ({ ...prev, address: generatedAddress }));
+    }, 300),
+    []
+  );
+
+  // Handle address field changes
+  const handleAddressFieldChange = (field: string, value: string) => {
+    const newAddressFields = { ...addressFields, [field]: value };
+    setAddressFields(newAddressFields);
+    
+    // Debounced update of the main address field
+    debouncedGenerateAddress(newAddressFields);
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any pending debounce timeouts
+    };
+  }, []);
 
   useEffect(() => {
     if (mumineen) {
@@ -95,15 +192,98 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address *
                 </label>
-                <textarea
-                  name="address"
-                  value={formData.address || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  rows={4}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter the address..."
-                />
+                
+                {/* Address fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Flat No */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Flat No. (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFields.flatNo}
+                      onChange={(e) => handleAddressFieldChange('flatNo', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Flat No."
+                    />
+                  </div>
+                  
+                  {/* Apartment Name */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Apartment Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFields.apartmentName}
+                      onChange={(e) => handleAddressFieldChange('apartmentName', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Apartment Name"
+                    />
+                  </div>
+                  
+                  {/* Plot Number */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Plot Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFields.plotNumber}
+                      onChange={(e) => handleAddressFieldChange('plotNumber', e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Plot Number"
+                    />
+                  </div>
+                  
+                  {/* Area */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Area *
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFields.area}
+                      onChange={(e) => handleAddressFieldChange('area', e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Area"
+                    />
+                  </div>
+                  
+                  {/* Landmark */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Landmark (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFields.landmark}
+                      onChange={(e) => handleAddressFieldChange('landmark', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Landmark"
+                    />
+                  </div>
+                </div>
+                
+                {/* Generated Address */}
+                <div className="mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Generated Address
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    rows={3}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                    placeholder="Generated address will appear here..."
+                    readOnly
+                  />
+                </div>
               </div>
 
               {/* Google Maps Link for Users */}
@@ -286,13 +466,97 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address
               </label>
-              <textarea
-                name="address"
-                value={formData.address || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              
+              {/* Address fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Flat No */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Flat No. (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addressFields.flatNo}
+                    onChange={(e) => handleAddressFieldChange('flatNo', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Flat No."
+                  />
+                </div>
+                
+                {/* Apartment Name */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Apartment Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addressFields.apartmentName}
+                    onChange={(e) => handleAddressFieldChange('apartmentName', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Apartment Name"
+                  />
+                </div>
+                
+                {/* Plot Number */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Plot Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={addressFields.plotNumber}
+                    onChange={(e) => handleAddressFieldChange('plotNumber', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Plot Number"
+                  />
+                </div>
+                
+                {/* Area */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Area *
+                  </label>
+                  <input
+                    type="text"
+                    value={addressFields.area}
+                    onChange={(e) => handleAddressFieldChange('area', e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Area"
+                  />
+                </div>
+                
+                {/* Landmark */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Landmark (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={addressFields.landmark}
+                    onChange={(e) => handleAddressFieldChange('landmark', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Landmark"
+                  />
+                </div>
+              </div>
+              
+              {/* Generated Address */}
+              <div className="mb-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Generated Address
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  placeholder="Generated address will appear here..."
+                  readOnly
+                />
+              </div>
             </div>
 
             {/* Google Maps Link */}
