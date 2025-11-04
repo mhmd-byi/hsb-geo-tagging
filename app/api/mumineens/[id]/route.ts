@@ -44,22 +44,28 @@ export async function PUT(
         );
       }
 
-      // Only allow address update for user role
+      // Only allow address update for user role with verification
       const updatedMumineen = await Mumineen.findOneAndUpdate(
         { its_id: its_id },
         { 
           address: body.address,
-          google_maps_link: body.google_maps_link
+          google_maps_link: body.google_maps_link,
+          verified: true,
+          verified_by: session.user.name || session.user.email || 'Unknown User',
+          verified_at: new Date()
         },
         { new: true, runValidators: true }
       );
 
-      // Update address and Google Maps link for all family members with same HOF
+      // Update address and verification for all family members with same HOF
       await Mumineen.updateMany(
         { hof_id: getMumineen.hof_id },
         { 
           address: body.address,
-          google_maps_link: body.google_maps_link
+          google_maps_link: body.google_maps_link,
+          verified: true,
+          verified_by: session.user.name || session.user.email || 'Unknown User',
+          verified_at: new Date()
         }
       );
 

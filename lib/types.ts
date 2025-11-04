@@ -20,6 +20,9 @@ export interface Mumineen {
   musaed_name?: string;
   musaed_contact?: string;
   isDeleted?: boolean;
+  verified?: boolean;
+  verified_by?: string;
+  verified_at?: Date;
 }
 
 export interface User {

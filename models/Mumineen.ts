@@ -16,6 +16,9 @@ export interface IMumineen extends Document {
   google_maps_link?: string;
   musaed_name?: string;
   musaed_contact?: string;
+  verified?: boolean;
+  verified_by?: string;
+  verified_at?: Date;
 }
 
 const MumineenSchema = new Schema<IMumineen>({
@@ -32,7 +35,10 @@ const MumineenSchema = new Schema<IMumineen>({
   address: { type: String, trim: true },
   google_maps_link: { type: String, trim: true },
   musaed_name: { type: String, trim: true },
-  musaed_contact: { type: String, trim: true }
+  musaed_contact: { type: String, trim: true },
+  verified: { type: Boolean, default: false },
+  verified_by: { type: String, trim: true },
+  verified_at: { type: Date }
 }, {
   timestamps: false, // Since the collection doesn't have createdAt/updatedAt
   collection: 'mumineens' // Explicitly specify the collection name
