@@ -165,6 +165,14 @@ export default function Home() {
             </div>
             {isAdmin && (
               <button
+                onClick={() => window.location.href = '/dashboard'}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                📊 Dashboard
+              </button>
+            )}
+            {isAdmin && (
+              <button
                 onClick={() => setShowUserManagement(true)}
                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
