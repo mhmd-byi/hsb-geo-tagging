@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: 'admin' | 'user';
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,7 +15,8 @@ const UserSchema = new Schema<IUser>({
   username: { type: String, required: true, unique: true, trim: true },
   email: { type: String, required: true, unique: true, trim: true, lowercase: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'user'], default: 'user', required: true }
+  role: { type: String, enum: ['admin', 'user'], default: 'user', required: true },
+  isActive: { type: Boolean, default: true, required: true }
 }, {
   timestamps: true,
   collection: 'users'

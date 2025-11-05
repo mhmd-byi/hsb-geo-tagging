@@ -31,6 +31,7 @@ export interface User {
   email: string;
   password: string;
   role: 'admin' | 'user';
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

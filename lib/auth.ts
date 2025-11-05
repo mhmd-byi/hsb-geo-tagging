@@ -35,6 +35,11 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // Check if user is active
+          if (!user.isActive) {
+            throw new Error('Your account has been disabled. Please contact the administrator.');
+          }
+
           const isPasswordValid = await bcrypt.compare(
             credentials?.password || '',
             user.password
