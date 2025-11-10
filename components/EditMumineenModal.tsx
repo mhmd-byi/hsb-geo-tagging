@@ -77,9 +77,9 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
   const debouncedGenerateAddress = useCallback(
     debounce((fields) => {
       const parts = [
-        fields.flatNo,
+        fields.flatNo ? `Flat No ${fields.flatNo}` : '',
         fields.apartmentName,
-        fields.plotNumber,
+        fields.plotNumber ? `Plot No ${fields.plotNumber}` : '',
         fields.area,
         fields.landmark
       ].filter(part => part.trim() !== '');
@@ -212,7 +212,7 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                       value={addressFields.flatNo}
                       onChange={(e) => handleAddressFieldChange('flatNo', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Flat No."
+                      placeholder="e.g., 101 or 101/A"
                     />
                   </div>
                   
@@ -241,7 +241,7 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                       onChange={(e) => handleAddressFieldChange('plotNumber', e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Plot Number"
+                      placeholder="e.g., 123 or 123/B"
                     />
                   </div>
                   

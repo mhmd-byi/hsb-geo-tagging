@@ -96,27 +96,21 @@ export async function PUT(
       const updateFields: any = {};
       if (address !== body.address) {
         updateFields.address = body.address;
+        // Also update individual address fields
+        updateFields.flat_no = body.flat_no;
+        updateFields.apartment_name = body.apartment_name;
+        updateFields.plot_number = body.plot_number;
+        updateFields.area = body.area;
+        updateFields.landmark = body.landmark;
       }
       if (googleMapsLink !== body.google_maps_link) {
         updateFields.google_maps_link = body.google_maps_link;
       }
       
-      const updateAllMumineenAddress = await Mumineen.updateMany(
+      await Mumineen.updateMany(
         { hof_id: body.hof_id }, 
         updateFields
       );
-      
-      if (!updateAllMumineenAddress) {
-        return NextResponse.json(
-          { success: false, error: 'Failed to update all mumineen records' },
-          { status: 400 }
-        );
-      } else {
-        return NextResponse.json(
-          { success: true, message: 'All mumineen records updated successfully' },
-          { status: 200 }
-        );
-      }
     }
 
     const updatedMumineen = await Mumineen.findOneAndUpdate(
