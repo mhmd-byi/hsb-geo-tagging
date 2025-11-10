@@ -13,6 +13,11 @@ export interface IMumineen extends Document {
   misaq?: string;
   marital_status?: string;
   address?: string;
+  flat_no?: string;
+  apartment_name?: string;
+  plot_number?: string;
+  area?: string;
+  landmark?: string;
   google_maps_link?: string;
   musaed_name?: string;
   musaed_contact?: string;
@@ -33,6 +38,11 @@ const MumineenSchema = new Schema<IMumineen>({
   misaq: { type: String, trim: true },
   marital_status: { type: String, trim: true },
   address: { type: String, trim: true },
+  flat_no: { type: String, trim: true },
+  apartment_name: { type: String, trim: true },
+  plot_number: { type: String, trim: true },
+  area: { type: String, trim: true },
+  landmark: { type: String, trim: true },
   google_maps_link: { type: String, trim: true },
   musaed_name: { type: String, trim: true },
   musaed_contact: { type: String, trim: true },

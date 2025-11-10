@@ -62,28 +62,18 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
         google_maps_link: mumineen.google_maps_link,
       });
 
-      // Parse existing address into fields
-      if (mumineen.address) {
-        parseAddressIntoFields(mumineen.address);
-      }
+      // Populate address fields from individual stored values
+      setAddressFields({
+        flatNo: mumineen.flat_no || '',
+        apartmentName: mumineen.apartment_name || '',
+        plotNumber: mumineen.plot_number || '',
+        area: mumineen.area || '',
+        landmark: mumineen.landmark || ''
+      });
     }
   }, [mumineen]);
 
-  // Parse address string into individual fields
-  const parseAddressIntoFields = (address: string) => {
-    const parts = address.split(', ').filter(part => part.trim() !== '');
-    
-    // Simple parsing logic - this can be enhanced based on your address format
-    setAddressFields({
-      flatNo: parts[0] || '',
-      apartmentName: parts[1] || '',
-      plotNumber: parts[2] || '',
-      area: parts[3] || '',
-      landmark: parts[4] || ''
-    });
-  };
-
-  // Debounced address generation
+// Debounced address generation
   const debouncedGenerateAddress = useCallback(
     debounce((fields) => {
       const parts = [
@@ -141,7 +131,16 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
 
     setIsLoading(true);
     try {
-      await onSave(formData);
+      // Include individual address field values
+      const dataToSave = {
+        ...formData,
+        flat_no: addressFields.flatNo,
+        apartment_name: addressFields.apartmentName,
+        plot_number: addressFields.plotNumber,
+        area: addressFields.area,
+        landmark: addressFields.landmark
+      };
+      await onSave(dataToSave);
       onClose();
     } catch (error) {
       console.error('Error updating mumineen:', error);
@@ -192,6 +191,14 @@ export default function EditMumineenModal({ isOpen, onClose, mumineen, onSave }:
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address *
                 </label>
+                
+                {/* Current Address Display */}
+                {mumineen.address && (
+                  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-xs font-medium text-yellow-800 mb-1">Current Address:</p>
+                    <p className="text-sm text-yellow-900">{mumineen.address}</p>
+                  </div>
+                )}
                 
                 {/* Address fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
